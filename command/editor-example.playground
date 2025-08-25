@@ -1,0 +1,92 @@
+import Foundation
+
+// MARK: - Command Protocol
+protocol Command {
+    func execute()
+    func undo()
+}
+
+// MARK: - Receiver
+class TextEditor {
+    private(set) var text: String = ""
+    
+    func write(_ newText: String) {
+        text += newText
+        print("Texto actual: \(text)")
+    }
+    
+    func delete(_ count: Int) {
+        let endIndex = text.index(text.endIndex, offsetBy: -count)
+        text = String(text[..<endIndex])
+        print("Texto actual: \(text)")
+    }
+}
+
+// MARK: - Concrete Commands
+class WriteCommand: Command {
+    private let editor: TextEditor
+    private let text: String
+    
+    init(editor: TextEditor, text: String) {
+        self.editor = editor
+        self.text = text
+    }
+    
+    func execute() {
+        editor.write(text)
+    }
+    
+    func undo() {
+        editor.delete(text.count)
+    }
+}
+
+// MARK: - Invoker (History Manager)
+class CommandManager {
+    private var undoStack: [Command] = []
+    private var redoStack: [Command] = []
+    
+    func execute(_ command: Command) {
+        command.execute()
+        undoStack.append(command)
+        redoStack.removeAll()
+    }
+    
+    func undo() {
+        guard let command = undoStack.popLast() else {
+            print("Nada para deshacer")
+            return
+        }
+        command.undo()
+        redoStack.append(command)
+    }
+    
+    func redo() {
+        guard let command = redoStack.popLast() else {
+            print("Nada para rehacer")
+            return
+        }
+        command.execute()
+        undoStack.append(command)
+    }
+}
+
+// MARK: - Ejemplo de uso
+let editor = TextEditor()
+let manager = CommandManager()
+
+let cmd1 = WriteCommand(editor: editor, text: "Hola ")
+let cmd2 = WriteCommand(editor: editor, text: "Mundo")
+let cmd3 = WriteCommand(editor: editor, text: "!")
+
+manager.execute(cmd1) // Escribe "Hola "
+manager.execute(cmd2) // Escribe "Mundo"
+manager.execute(cmd3) // Escribe "!"
+
+print("\n--- Deshacer ---")
+manager.undo() // Borra "!"
+manager.undo() // Borra "Mundo"
+
+print("\n--- Rehacer ---")
+manager.redo() // Vuelve a escribir "Mundo"
+manager.redo() // Vuelve a escribir "!"
