@@ -1,0 +1,67 @@
+import UIKit
+import PlaygroundSupport
+
+class EnemyType {
+  let name: String
+  let sprite: UIImage
+
+  init(name: String, sprite: UIImage) {
+    self.name = name
+    self.sprite = sprite
+  }
+
+  func render(at position: CGPoint, in view: UIView) {
+    let imageView = UIImageView(image: sprite)
+    imageView.frame = CGRect(x: position.x, y: position.y, width: 50, height: 50)
+    view.addSubview(imageView)
+  }
+}
+
+class Enemy {
+  private let type: EnemyType
+  private let position: CGPoint
+
+  init(type: EnemyType, position: CGPoint) {
+    self.type = type
+    self.position = position
+  }
+
+  func render(in view: UIView) {
+    type.render(at: position, in: view)
+  }
+}
+
+class EnemyFactory {
+  private var types: [String: EnemyType] = [:]
+  func getEnemyType(name: String, spriteName: String) -> EnemyType {
+    if let type = types[name] {
+      return type
+    }
+
+    let sprite = UIImage(named: spriteName)!
+    let type = EnemyType(name: name, sprite: sprite)
+    types[name] = type
+    return type
+  }
+}
+
+
+let containerView = UIView(frame: CGRect(x: 0, y:0, width: 400, height: 400))
+containerView.backgroundColor = white
+
+
+let factory = EnemyFactory()
+
+let goblinType = factory.getEnemyType(name: "Goblin", spriteName: "goblin.png")
+let orcType = factory.getEnemyType(name: "Orc", spriteName: "orc.png")
+
+let enemies: [Enemy] = [
+  Enemy(type: goblinType, position: CGPoint(x: 50, y: 50)),
+  Enemy(type: goblinType, position: CGPoint(x: 120, y: 100)),
+  Enemy(type: orcType, position: CGPoint(x: 200, y: 150)),
+  Enemy(type: orcType, position: CGPoint(x: 300, y: 250))
+]
+
+enemies.forEach { $0.render(in: containerView) }
+
+PlaygroundPage.current.liveView = containerView
